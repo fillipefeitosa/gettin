@@ -1,0 +1,3 @@
+[submodule "Ferramentas/osmnx-examples"]
+	path = Ferramentas/osmnx-examples
+	url = git@github.com:gboeing/osmnx-examples.git
