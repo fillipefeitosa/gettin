@@ -95,7 +95,7 @@ def add_street_to_map(gdf_open_street2019_municipio):
     
     return street_categories
          
-def generate_fig_landuse(schoolsPre, gdf_open_street2019_municipio,gpd_COS_municipio, lines, selection):
+def generate_fig_landuse(schoolsPre, gdf_open_street2019_municipio,gpd_COS_municipio, lines, selection,selectedPolygon):
     
     #define RGB para cada tipo de ocupação de solo 
     colors_cos = {'Territórios artificializados': (0.8, 0, 0),
@@ -112,6 +112,7 @@ def generate_fig_landuse(schoolsPre, gdf_open_street2019_municipio,gpd_COS_munic
 
     # _-------------_ Criação do Gráfico _-----------_
     fig, ax = plt.subplots(figsize=(20, 20))
+    ax.set_axis_off()
 
     #Plota ocupação e uso de solo por categoria, em função do esquema de cores definido em colors_cos_hexa
     for categoria, data in gpd_COS_municipio.groupby('Megaclasse'):
@@ -129,29 +130,33 @@ def generate_fig_landuse(schoolsPre, gdf_open_street2019_municipio,gpd_COS_munic
         
     lines.plot(ax=ax, alpha=0.06, color='black')
 
+    # Get the outer boundary for the selected Polygon
+    if (selection['tipology']=='Loures'):
+        loures_macro_regions.plot(ax=ax,facecolor='None',edgecolor='gray',linewidth=5, alpha=0.8, zorder=30)
+    else:
+        polygon = selectedPolygon.geometry.unary_union
+        selectedPolygon = gpd.GeoDataFrame(geometry=[polygon])
+        selectedPolygon.plot(ax=ax,facecolor='None',edgecolor='gray',linewidth=5, alpha=0.8, zorder=30)
 
     ax.set_axis_off()
 
-    markersize = 150
+    markersize = 180
 
     if ('added_classes' in schoolsPre.columns):
-        schoolsPre[schoolsPre['added_classes']==0].plot(ax=ax, markersize=markersize, color='green', marker='o', alpha=0.8,zorder=50, label='Escolas sem redução de alunos')
-        schoolsPre[schoolsPre['added_classes']==1].plot(ax=ax, markersize=markersize, marker='$1$', label='Escola ajustada com 1(uma) turma adicional', color='#3c1361', alpha=0.8, zorder=80)
-        schoolsPre[schoolsPre['added_classes']==2].plot(ax=ax, markersize=markersize, marker='$2$', label='Escola ajustada com 2(duas) turmas adicional', color='#52307c', alpha=0.8, zorder=80)
-        schoolsPre[schoolsPre['added_classes']==3].plot(ax=ax, markersize=markersize, marker='$3$', label='Escola ajustada com 3(três) turmas adicional', color='#663a82', alpha=0.8, zorder=80)
+        schoolsPre[schoolsPre['added_classes']==0].plot(ax=ax, markersize=markersize, color='green', marker='o', alpha=1,zorder=50, label='Escolas sem redução de alunos')
+        schoolsPre[schoolsPre['added_classes']==1].plot(ax=ax, markersize=markersize, marker='$1$', label='Escola ajustada com 1(uma) turma adicional', color='#3c1361', alpha=1, zorder=80)
+        schoolsPre[schoolsPre['added_classes']==2].plot(ax=ax, markersize=markersize, marker='$2$', label='Escola ajustada com 2(duas) turmas adicional', color='#52307c', alpha=1, zorder=80)
+        schoolsPre[schoolsPre['added_classes']==3].plot(ax=ax, markersize=markersize, marker='$3$', label='Escola ajustada com 3(três) turmas adicional', color='#663a82', alpha=1, zorder=80)
 
     else: 
-        print("[DEBUG]: Entered no classes plot ")
-        schoolsPre.plot(ax=ax, markersize=markersize, color='green', marker='o', alpha=0.8,zorder=50, label='Escolas sem redução de alunos')
+        schoolsPre.plot(ax=ax, markersize=markersize, color='#00b300', marker='o', alpha=1,zorder=50, label='Escolas sem redução de alunos')
 
-    schoolsPre[schoolsPre.students<schoolsPre.loc[:,studentsActualEnrolledSelection]].plot(ax=ax, markersize=markersize, color='#B22222', marker='s', label='Escola com redução de alunos', alpha=0.8, zorder=60)
-
-    print("[DEBUG]: created both Plots for regular cases ")
+    schoolsPre[schoolsPre.students<schoolsPre.loc[:,studentsActualEnrolledSelection]].plot(ax=ax, markersize=markersize, color='#8D021F', marker='s', label='Escola com redução de alunos', alpha=1, zorder=60)
 
 
-    plt.legend(prop={'size':15}, bbox_to_anchor = (1.2,0.28))
 
-    print("[DEBUG]: {}".format(selection))
+    # plt.legend(prop={'size':15}, bbox_to_anchor = (1.2,0.28))
+
     counter = 0
     for idx, row in schoolsPre.iterrows():
 
@@ -160,57 +165,93 @@ def generate_fig_landuse(schoolsPre, gdf_open_street2019_municipio,gpd_COS_munic
         
         # Offset Correction
         offset = {'x':35, 'y':45} if idx==0 else offset
+        offset = {'x':35, 'y':35} if idx==1 else offset
         offset = {'x':-35, 'y':35} if idx==2 else offset
+        offset = {'x':-25, 'y':-25} if idx==3 else offset
         offset = {'x':25, 'y':35} if idx==5 else offset
         offset = {'x':25, 'y':35} if idx==6 else offset
-        offset = {'x':15, 'y':35} if idx==13 else offset
+        offset = {'x':-25, 'y':-35} if idx==7 else offset
+        offset = {'x':-35, 'y':35} if idx==9 else offset
+        offset = {'x':35, 'y':-15} if idx==13 else offset
+        offset = {'x':65, 'y':35} if idx==13 else offset
         offset = {'x':65, 'y':-35} if idx==16 else offset
-        offset = {'x':25, 'y':-15} if idx==44 else offset
-        offset = {'x':25, 'y':-15} if idx==45 else offset
+        offset = {'x':30, 'y':30} if idx==30 else offset
+        offset = {'x':-45, 'y':45} if idx==32 else offset
+        offset = {'x':40, 'y':50}  if idx==42 else offset
+        offset = {'x':25, 'y':50}  if idx==43 else offset
+        offset = {'x':-25, 'y':-25} if idx==44 else offset
+        offset = {'x':35, 'y':-25} if idx==45 else offset
+        offset = {'x':-25, 'y':-25} if idx==46 else offset
         offset = {'x':0, 'y':-30} if idx==47 else offset
-        offset = {'x':55, 'y':45} if idx==87 else offset
+        offset = {'x':-45, 'y':-15} if idx==48 else offset
+        offset = {'x':-45, 'y':-15} if idx==49 else offset
+        offset = {'x':+35, 'y':35} if idx==51 else offset
+        offset = {'x':55, 'y':-30} if idx==54 else offset
+        offset = {'x':-25, 'y':-25} if idx==56 else offset
+        offset = {'x':35, 'y':35} if idx==57 else offset
+        offset = {'x':70, 'y':60} if idx==58 else offset
+        offset = {'x':+35, 'y':+35} if idx==70 else offset
+        offset = {'x':+35, 'y':-35} if idx==71 else offset
+        offset = {'x':+35, 'y':-30} if idx==78 else offset
+        offset = {'x':+35, 'y':+35} if idx==83 else offset
+        offset = {'x':+35, 'y':+35} if idx==85 else offset
+        offset = {'x':60, 'y':45} if idx==87 else offset
+        offset = {'x':45, 'y':0} if idx==88 else offset
+        offset = {'x':+35, 'y':-35} if idx==90 else offset
+        offset = {'x':+35, 'y':+35} if idx==91 else offset
 
-        offset = {'x':45, 'y':20} if idx==94 else offset
+
+        offset = {'x':95, 'y':20} if idx==94 else offset
+        offset = {'x':25, 'y':35} if idx==97 else offset
         offset = {'x':25, 'y':-45} if idx==103 else offset
-        offset = {'x':45, 'y':0} if idx==111 else offset
+        offset = {'x':35, 'y':35} if idx==105 else offset
+        offset = {'x':35, 'y':-20} if idx==107 else offset
         offset = {'x':35, 'y':20} if idx==108 else offset
+        offset = {'x':45, 'y':0} if idx==111 else offset
         offset = {'x':35, 'y':20} if idx==114 else offset
-        offset = {'x':-35, 'y':30} if idx==134 else offset
+        offset = {'x':-35, 'y':-35} if idx==120 else offset
+        offset = {'x':+35, 'y':+35} if idx==131 else offset
+        offset = {'x':-50, 'y':30} if idx==134 else offset
+        offset = {'x':-25, 'y':25} if idx==136 else offset
         offset = {'x':25, 'y':-30} if idx==138 else offset
+        offset = {'x':-25, 'y':-25} if idx==141 else offset
+        offset = {'x':-35, 'y':-35} if idx==143 else offset
+        offset = {'x':-35, 'y':35} if idx==147 else offset
+        offset = {'x':-25, 'y':-25} if idx==150 else offset
+        offset = {'x':35, 'y':35} if idx==151 else offset
         offset = {'x':25, 'y':35} if idx==152 else offset
+        offset = {'x':-45, 'y':-25} if idx==161 else offset
         offset = {'x':-35, 'y':-35} if idx==163 else offset
-        offset = {'x':0, 'y':-20} if idx==164 else offset
+        offset = {'x':-45, 'y':-25} if idx==164 else offset
+        offset = {'x':30, 'y':35} if idx==167 else offset
         offset = {'x':-35, 'y':30} if idx==168 else offset
         offset = {'x':35, 'y':-50} if idx==169 else offset
         offset = {'x':35, 'y':20} if idx==148 else offset
         
-        print("Id: {} - Enroled: {} - Projected_Students: {} - Ciclo: {}".format(idx,row[selection['studentsActualEnrolledSelection']],row['students'],row[selection['schoolSelection']]))
-
         # school code
-        ax.annotate(str(int(idx)).zfill(3), xy=(row['geometry'].x,row['geometry'].y),
-                xytext=(offset['x']+20, offset['y']), textcoords='offset points',
-                size=8, ha='right', va="center",zorder=200,
-                bbox=dict(boxstyle="round", alpha=0.8,color='#F1AF9F')
-                )
+        # ax.annotate(str(int(idx)).zfill(3), xy=(row['geometry'].x,row['geometry'].y),
+        #         xytext=(offset['x']+19, offset['y']+10), textcoords='offset points',
+        #         size=8, ha='right', va="center",zorder=200,
+        #         bbox=dict(boxstyle="round", alpha=0.8,color='#F1AF9F')
+        #         )
         # Enroled students 2021
         ax.annotate(str(int(row[selection['studentsActualEnrolledSelection']])).zfill(3), xy=(row['geometry'].x,row['geometry'].y),
-                    xytext=(offset['x']+20, offset['y']-13), textcoords='offset points',
-                    size=8, ha='right', va="center",zorder=200,
+                    xytext=(offset['x']+27, offset['y']-8), textcoords='offset points',
+                    size=10, ha='right', va="center",zorder=200,
                     bbox=dict(boxstyle="round", alpha=0.8, color="gray"))
         # students projected
         ax.annotate(str(int(row['students'])).zfill(3), xy=(row['geometry'].x,row['geometry'].y),
                     xytext=(offset['x'], offset['y']), textcoords='offset points',
-                    size=8, ha='right', va="center",zorder=200,
+                    size=10, ha='right', va="center",zorder=200,
                     bbox=dict(boxstyle="round", alpha=0.8)
                     )
         # School Capacity
         ax.annotate(str(int(row[selection['schoolSelection']])).zfill(3), xy=(row['geometry'].x,row['geometry'].y),
-                    xytext=(offset['x'], offset['y']-13), textcoords='offset points',
-                    size=8, ha='right', va="center",zorder=100,
+                    xytext=(offset['x'], offset['y']-18), textcoords='offset points',
+                    size=10, ha='right', va="center",zorder=100,
                     bbox=dict(boxstyle="round", alpha=0.8, color="#FFFF66"),
-                    arrowprops=dict(arrowstyle="-", alpha=1, zorder=40))
+                    arrowprops=dict(arrowstyle="-", alpha=1, zorder=200))
         counter += 1
-    print("[DEBUG]: Left annotations")
 
     return fig
 
@@ -230,38 +271,43 @@ def calculate_demand_density_totalDemand_bgri(df_projection, demandSelection):
     df_projection['densidade_total_vagas'] = (df_projection.loc[:,demandSelection]/total_vacancy)*1000
     return df_projection
 
-def sample_density_heatmaps(df_projection, demandSelection, gdf_shapes, tipology):
+def sample_density_heatmaps(df_projection, demandSelection, gdf_shapes):
+    print('---> Generating Heatmaps for {}'.format(demandSelection))
     df_projection = calculate_demand_density_area_bgri(df_projection, demandSelection, gdf_shapes)
+    # Get the ratio of the total demand in the Municipality
     df_projection = calculate_demand_density_totalDemand_bgri(df_projection, demandSelection)
     gdf_projection = gpd.GeoDataFrame(df_projection)
+    gdf_projection = gdf_projection[['Code_Freg','geometry','densidade_total_vagas']]
 
-    # fig, ax = plt.subplots(1,1,figsize=(20,20))
-    # gdf_shapes.plot(ax=ax, facecolor='#E6E6FA', edgecolor='#B0C4DE')
-    # divider = make_axes_locatable(ax)
-    # cax = divider.append_axes("right", size="5%", pad=0.1)
-    # gdf_projection[gdf_projection['densidade_total_area']>0].plot(ax=ax, column='densidade_total_area', legend=True, cax=cax,cmap='Reds')
-    # fig.savefig('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/results/heatmap_densidade_area.png')
+
 
     fig, ax = plt.subplots(1,1,figsize=(20,20))
-    gdf_shapes.plot(ax=ax, facecolor='#E6E6FA', edgecolor='#B0C4DE')
+    ax.set_axis_off()
+
+    loures_2019_fregs.plot(ax=ax, edgecolor='#B0C4DE', facecolor='None', linewidth=2, alpha=0.8, zorder=40)
+    
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right",size="5%",pad=0.1)
-    gdf_projection[gdf_projection['densidade_total_vagas']>0].plot(ax=ax,column='densidade_total_vagas', legend=True, cax=cax, cmap='Reds')
-    fig.savefig('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/results/heatmap_densidade/heatmap_densidade_vagas_'+tipology+'_'+demandSelection+'.png')
+    loures_macro_regions.plot(ax=ax, edgecolor='gray', facecolor='None',linewidth=5, alpha=0.8,zorder=50)
+    gdf_projection.dissolve(by='Code_Freg',aggfunc='mean').plot(ax=ax,column='densidade_total_vagas', legend=True, cax=cax, cmap='Reds',zorder=20)
+    fig.savefig('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/results/heatmap_densidade/heatmap_densidade_vagas_'+demandSelection+'.png')
 
     return df_projection
 
-def generate_fregs_density_shape(df_projection,tipology):
+def generate_fregs_density_shape(df_projection,gdf_shapes,demandSelection,tipology):
+    # Get the density for the selected Projection and tipology... Forced by demand on DF_Projection
     gdf_projection = gpd.GeoDataFrame(df_projection)
     gdf_freg = gdf_projection.dissolve(by='Code_Freg')
     gdf_freg['densidade_freg_vagas'] = gdf_projection[['Code_Freg','densidade_total_vagas']].groupby('Code_Freg').mean()
     
     # No need for map here
     # fig, ax = plt.subplots(1,1,figsize=(20,20))
+    # ax.set_axis_off()
+    # gdf_shapes.plot(ax=ax,facecolor='white', edgecolor='#B0C4DE',zorder=10)
     # divider = make_axes_locatable(ax)
     # cax = divider.append_axes("right",size="5%",pad=0.1)
-    # gdf_freg[gdf_freg['densidade_total_vagas']>0].plot(ax=ax,column='densidade_total_vagas', legend=True, cax=cax, cmap='Reds')
-    # fig.savefig('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/results/heatmap_'+tipology+'.png')
+    # gdf_freg[gdf_freg['densidade_total_vagas']>0].plot(ax=ax,column='densidade_total_vagas', legend=True, cax=cax, cmap='Reds',zorder=20)
+    # fig.savefig('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/results/heatmap_densidade/heatmap_'+tipology+'_'+demandSelection+'.png')
 
     # index to str, compatible with schoolsPre Cod_Freg Column
     gdf_freg.index = gdf_freg.index.astype(str)
@@ -282,13 +328,18 @@ population_projection_raw = population_projection_raw.drop(columns=['BGRI'])
 population_projection_raw['proj_sum_2_3'] = population_projection_raw.loc[:,"2_CEB_Proj_2030"]+population_projection_raw.loc[:,"3_CEB_Proj_2030"]
 
 # Used for Loures, beacuse of CAOP 2018 redesing
-gdf_freguesias_CAOP2018_raw = gpd.read_file('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/loures_subseccoes_BGRI_CAOP_2018/gpd_BGRI_2011_CAOP2018_Final.shp')
+# gdf_freguesias_CAOP2018_raw = gpd.read_file('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/loures_subseccoes_BGRI_CAOP_2018/gpd_BGRI_2011_CAOP2018_Final.shp')
+gdf_freguesias_CAOP2018_raw = gpd.read_file('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/loures_subseccoes_BGRI_CAOP_2018/gdf_BGRI_2011_CAOP2018_MACRO_Loures.shp')
 gdf_freguesias_CAOP2018_raw = gdf_freguesias_CAOP2018_raw[gdf_freguesias_CAOP2018_raw['DTMN11']=='1107']
 
-
-
 # Used for Loures, to generate better plotting based on macro regions
-loures_macro_regions = gpd.read_file('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/macro_regioes_shp/Areas_Territoriais2.shp')
+# Needed to adjust after CAOP alteration
+loures_macro_regions = gdf_freguesias_CAOP2018_raw.dissolve(by='Tipo')
+loures_macro_regions['Tipologia'] = loures_macro_regions.index
+loures_macro_regions.index = [0,1,2]
+
+# Load new Freg boundaries
+loures_2019_fregs = gpd.read_file('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/CAOP_2019_Freguesias/Cont_AAD_CAOP2019_Loures.shp')
 
 # Load and Overlay Plotting Data
 gpd_COS_municipio_raw = gpd.read_file('/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/gdf_COS/gdf_COS_2015_Loures.shp')
@@ -318,9 +369,10 @@ schools_raw['reserved_index'] = schools_raw.index
 
 
 # Define some globals
-# globals_dict = {"pre":['Capacidade','Pre_escolar_Proj_2030','Alunos_EPE',25],'1_ciclo':['Capacida_1','1_CEB_Proj_2030','Alunos_1CE',24],'2_ciclo':['Capacida_2','2_CEB_Proj_2030','Alunos_2CE',28],'3_ciclo':['Capacida_3','3_CEB_Proj_2030','Alunos_3CE',28],'4_ciclo':['Capacida_4','Secundario_Proj_2030','Alunos_Sec',28]}
+globals_dict = {"pre":['Capacidade','Pre_escolar_Proj_2030','Alunos_EPE',25],'1_ciclo':['Capacida_1','1_CEB_Proj_2030','Alunos_1CE',24],'2_ciclo':['Capacida_2','2_CEB_Proj_2030','Alunos_2CE',28],'3_ciclo':['Capacida_3','3_CEB_Proj_2030','Alunos_3CE',28],'4_ciclo':['Capacida_4','Secundario_Proj_2030','Alunos_Sec',28]}
 list_tipology = ['Oriental','Norte_Urbano','Norte_Rural', 'Loures']
-globals_dict = {"pre":['Capacidade','Pre_escolar_Proj_2030','Alunos_EPE',25]}
+# globals_dict = {'3_ciclo':['Capacida_3','3_CEB_Proj_2030','Alunos_3CE',28]}
+# list_tipology = ['Loures']
 # population_projection_raw = sample_density_heatmaps(population_projection_raw, globals_dict['pre'][1], gdf_freguesias_CAOP2018_raw)
 # population_projection_raw.index = population_projection_raw.key_0
 # population_projection_raw.drop(columns=['key_0'], inplace=True)
@@ -328,17 +380,20 @@ globals_dict = {"pre":['Capacidade','Pre_escolar_Proj_2030','Alunos_EPE',25]}
 infeasible = []
 unique_added_class = []
 for ciclo in globals_dict.keys():
+    # Create heatmaps for each study cicle
+    projectionSelection = globals_dict[ciclo][1]
+
+    population_projection_with_density = sample_density_heatmaps(population_projection_raw, globals_dict[ciclo][1], gdf_freguesias_CAOP2018_raw)
+    population_projection_with_density.index = population_projection_with_density.key_0
+    population_projection_with_density.drop(columns=['key_0'], inplace=True)
+
     for tipology in list_tipology:
         print("---------------------------------------")
         print("---> Running model for {} - {}".format(ciclo,tipology))
         schoolSelection = globals_dict[ciclo][0]
-        projectionSelection = globals_dict[ciclo][1]
         studentsActualEnrolledSelection = globals_dict[ciclo][2]
 
 
-        population_projection_with_density = sample_density_heatmaps(population_projection_raw, globals_dict[ciclo][1], gdf_freguesias_CAOP2018_raw, tipology)
-        population_projection_with_density.index = population_projection_with_density.key_0
-        population_projection_with_density.drop(columns=['key_0'], inplace=True)
 
         if (tipology != 'Loures'):
 
@@ -349,7 +404,8 @@ for ciclo in globals_dict.keys():
             gdf_open_street2019_municipio = gpd.overlay(loures_macro_regions[loures_macro_regions['Tipologia']==tipology], gdf_open_street2019_municipio_raw, how='intersection')
 
             # Limit the map to the Macro Region
-            selectedPolygon = gpd.overlay(loures_macro_regions[loures_macro_regions['Tipologia']==tipology], gdf_freguesias_CAOP2018_raw, how='intersection')
+            selectedPolygon = gdf_freguesias_CAOP2018_raw[gdf_freguesias_CAOP2018_raw['Tipo']==tipology]
+            # selectedPolygon = gpd.overlay(loures_macro_regions[loures_macro_regions['Tipologia']==tipology], gdf_freguesias_CAOP2018_raw, how='intersection')
         else:
             # If All is selected, use raw and the Original SelectedPolygon
             gdf_freguesias_CAOP2018 = gdf_freguesias_CAOP2018_raw
@@ -358,12 +414,6 @@ for ciclo in globals_dict.keys():
             # Get the entire Polygon
             selectedPolygon = gdf_freguesias_CAOP2018_raw[gdf_freguesias_CAOP2018_raw['DTMN11']=='1107']
 
-        ######## TO DO #########
-        # Heatmaps para macro região e ciclo - ok
-        # tirar a escola id= 21 (IP trans), do terceiro e secundário - ok
-        # Organizar um bucadinho aquelas coisinhas ali no mapa. - ok
-        # Retirar o ID das escolas
-        ######## TO DO #########
 
         # Perform the overlay
         schools = gpd.overlay(schools_raw, selectedPolygon, how='intersection') # REMEMBER TO RESTART THE SCHOOLS
@@ -372,7 +422,6 @@ for ciclo in globals_dict.keys():
         
 
         # Limit the projection to the analized BGRI's
-
         population_projection = population_projection_with_density[population_projection_with_density.index.isin(selectedPolygon.BGRI11)]
 
         # First Limitation on distanceMatrix
@@ -392,7 +441,7 @@ for ciclo in globals_dict.keys():
             shortage = total_demand - total_offer
             print("---> Lacking school vacancy: {} vacancies needed".format(shortage))
             print("---> Creating new vacancies based on demand density.")
-            gdf_freg = generate_fregs_density_shape(population_projection, tipology)
+            gdf_freg = generate_fregs_density_shape(population_projection,selectedPolygon,globals_dict[ciclo][1],tipology)
             # Get offer from gdf_freg
             schoolsPre['densidade_freg_vagas'] = schoolsPre.apply(lambda x: gdf_freg.loc[x['Cod_Freg']==gdf_freg.index].densidade_freg_vagas.values[0], axis=1)
             # Put schools in descending order of vacancy density
@@ -550,11 +599,9 @@ for ciclo in globals_dict.keys():
 
             print("---> generating projXatual landuse figure")
             # plot_type = { 'selection': studentsActualEnrolledSelection, 'box_field':'projXatual'}
-            selection = {'schoolSelection':schoolSelection, 'studentsActualEnrolledSelection': studentsActualEnrolledSelection}
-            fig = generate_fig_landuse(schoolsPre, gdf_open_street2019_municipio,gpd_COS_municipio, lines, selection)
-            print("[DEBUG]: Image generated {}".format(fig))
+            selection = {'schoolSelection':schoolSelection, 'studentsActualEnrolledSelection': studentsActualEnrolledSelection, 'tipology':tipology}
+            fig = generate_fig_landuse(schoolsPre, gdf_open_street2019_municipio,gpd_COS_municipio, lines, selection,selectedPolygon)
             fig.savefig("/home/fillipe/Projects/gettin/optimization/data_gettin/carta_educativa_loures/results/macro_regioes/"+tipology+"-"+studentsActualEnrolledSelection+".png")
-            print("[DEBUG]: {} - {}".format(tipology,studentsActualEnrolledSelection))
 
             if ('added_classes' in schoolsPre.columns):
                 unique_added_class.append(schoolsPre.added_classes.unique())
